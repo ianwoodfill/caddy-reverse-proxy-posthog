@@ -1,22 +1,34 @@
 { # global options
-    admin off # theres no need for the admin api in railway's environment
-    persist_config off # storage isn't persistent anyway
-    auto_https off # railway handles https for us, this would cause issues if left enabled
+    admin off # disable the admin API
+    persist_config off # storage isn't persistent
+    auto_https off # disable automatic HTTPS
     log { # runtime logs
-        format console # set runtime log format to console mode 
+        format console # set runtime log format to console mode
     }
     servers { # server options
         trusted_proxies static private_ranges # trust railway's proxy
     }
 }
 
-:{$PORT} { # site block, listens on the $PORT environment variable, automatically assigned by railway
+:{$PORT} { # site block, listens on the $PORT environment variable
     log { # access logs
         format console # set access log format to console mode
     }
 
-  reverse_proxy https://app.posthog.com:443 {
-    header_up Host app.posthog.com
-    header_down -Access-Control-Allow-Origin
-  }
+    # CORS configuration for any subdomain of cassidyai.com
+    @allowedOrigin {
+        header_regexp Origin ^https://([a-zA-Z0-9-]+\.)*cassidyai\.com$
+    }
+    header @allowedOrigin Access-Control-Allow-Origin {http.request.header.Origin}
+
+    # Add other necessary CORS headers here
+    # For example:
+    # header @allowedOrigin Access-Control-Allow-Methods "GET, POST, OPTIONS"
+    # header @allowedOrigin Access-Control-Allow-Headers "*"
+
+    # Reverse proxy configuration for PostHog
+    reverse_proxy https://app.posthog.com:443 {
+        header_up Host app.posthog.com
+        header_down -Access-Control-Allow-Origin
+    }
 }
