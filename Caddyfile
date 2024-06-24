@@ -31,4 +31,8 @@
         header_up Host app.posthog.com
         header_down -Access-Control-Allow-Origin
     }
+
+    header {
+        Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+    }
 }
